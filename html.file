@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Panel — Secure Access Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite: #171a21;
+    --panel: #20242e;
+    --panel-raised: #262b37;
+    --brass: #c9973e;
+    --brass-dim: #8a6a2c;
+    --ok: #4caf7d;
+    --danger: #d9534f;
+    --text: #e8e6e1;
+    --text-dim: #8c92a3;
+    --led-off: #3a3f4c;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 50% -10%, #2a2f3c 0%, var(--graphite) 55%),
+      var(--graphite);
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+
+  .rig{
+    width:100%;
+    max-width:420px;
+  }
+
+  .marquee{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .marquee .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:.28em;
+    color: var(--brass);
+    text-transform:uppercase;
+  }
+  .marquee h1{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800;
+    font-size:26px;
+    margin:6px 0 4px;
+    letter-spacing:.02em;
+  }
+  .marquee p{
+    color: var(--text-dim);
+    font-size:12.5px;
+    margin:0;
+  }
+
+  .panel{
+    background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+    border: 1px solid #333a49;
+    border-radius:14px;
+    padding: 22px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,.6),
+      inset 0 1px 0 rgba(255,255,255,.03);
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute; top:10px; left:10px; right:10px;
+    height:1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  }
+
+  .tabs{
+    display:flex;
+    background: #171a21;
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:20px;
+    border:1px solid #2c313d;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 0;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color: var(--text-dim);
+    border-radius:7px;
+    cursor:pointer;
+    transition: all .15s ease;
+    user-select:none;
+  }
+  .tab.active{
+    background: var(--brass);
+    color:#20242e;
+    font-weight:700;
+  }
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:11px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color: var(--text-dim);
+    margin-bottom:6px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .field input{
+    width:100%;
+    background: #14161d;
+    border: 1px solid #333a49;
+    border-radius:8px;
+    padding:11px 12px;
+    color: var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    outline:none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus{
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(201,151,62,.15);
+  }
+  .hint{
+    font-size:11px;
+    color: var(--text-dim);
+    margin-top:5px;
+  }
+
+  .btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background: var(--brass);
+    color:#20242e;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition: transform .1s ease, background .15s ease;
+    margin-top:4px;
+  }
+  .btn:hover{ background:#d9a94c; }
+  .btn:active{ transform: scale(.98); }
+  .btn:disabled{
+    background: #3a3f4c;
+    color: var(--text-dim);
+    cursor:not-allowed;
+  }
+
+  .msg{
+    margin-top:14px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.5;
+    display:none;
+  }
+  .msg.show{ display:block; }
+  .msg.ok{ background: rgba(76,175,125,.12); border:1px solid rgba(76,175,125,.35); color:#8fd6ac; }
+  .msg.err{ background: rgba(217,83,79,.12); border:1px solid rgba(217,83,79,.35); color:#f0a8a6; }
+  .msg.warn{ background: rgba(201,151,62,.12); border:1px solid rgba(201,151,62,.35); color:#e8c583; }
+
+  /* attempt LEDs — the signature element: physical keypad-style failure lights */
+  .led-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#14161d;
+    border:1px solid #2c313d;
+    border-radius:8px;
+    padding:10px 12px;
+    margin-top:16px;
+  }
+  .led-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color: var(--text-dim);
+  }
+  .leds{ display:flex; gap:7px; }
+  .led{
+    width:11px; height:11px;
+    border-radius:50%;
+    background: var(--led-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.5);
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+  .led.lit{
+    background: var(--danger);
+    box-shadow: 0 0 8px rgba(217,83,79,.85), inset 0 1px 2px rgba(0,0,0,.3);
+  }
+
+  .lockout-banner{
+    display:none;
+    margin-top:16px;
+    text-align:center;
+    background: rgba(217,83,79,.08);
+    border:1px solid rgba(217,83,79,.35);
+    border-radius:10px;
+    padding:14px;
+  }
+  .lockout-banner.show{ display:block; }
+  .lockout-banner .countdown{
+    font-family:'JetBrains Mono', monospace;
+    font-size:30px;
+    font-weight:800;
+    color: var(--danger);
+    letter-spacing:.03em;
+  }
+  .lockout-banner .sub{
+    font-size:11px;
+    color: var(--text-dim);
+    margin-top:4px;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .footnote{
+    text-align:center;
+    margin-top:16px;
+    font-size:11px;
+    color: var(--text-dim);
+    line-height:1.6;
+  }
+  .footnote code{
+    background:#14161d;
+    padding:1px 5px;
+    border-radius:4px;
+    color: var(--brass);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <div class="marquee">
+    <div class="eyebrow">Vault Panel</div>
+    <h1>Secure Access Demo</h1>
+    <p>Register &amp; login, mirrored from the C++ lockout logic</p>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="login">Login</div>
+      <div class="tab" data-tab="register">Register</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-view">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="apna username likhein">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="apna password likhein">
+      </div>
+      <button class="btn" id="login-btn">Unlock</button>
+
+      <div class="led-row">
+        <span class="led-label">Failed attempts</span>
+        <div class="leds" id="login-leds">
+          <div class="led" data-i="1"></div>
+          <div class="led" data-i="2"></div>
+          <div class="led" data-i="3"></div>
+        </div>
+      </div>
+
+      <div class="lockout-banner" id="lockout-banner">
+        <div class="countdown" id="lockout-countdown">00:00</div>
+        <div class="sub">account locked — dobara try se pehle intezaar karein</div>
+      </div>
+
+      <div class="msg" id="login-msg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-view" style="display:none;">
+      <div class="field">
+        <label>Choose username</label>
+        <input type="text" id="reg-username" autocomplete="username" placeholder="naya username">
+      </div>
+      <div class="field">
+        <label>Choose password</label>
+        <input type="password" id="reg-password" autocomplete="new-password" placeholder="kam se kam 6 characters">
+        <div class="hint">Min. 6 characters — stored obfuscated in your browser only.</div>
+      </div>
+      <button class="btn" id="register-btn">Create account</button>
+      <div class="msg" id="register-msg"></div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Data lives only in this browser's <code>localStorage</code> — there's no server.<br>
+    This mirrors the original demo's logic (3 attempts, 60s lockout); it's not real-world secure storage.
+  </div>
+</div>
+
+<script>
+(function(){
+  const MAX_ATTEMPTS = 3;
+  const LOCKOUT_DURATION = 60; // seconds
+
+  const USERS_KEY = 'vault_users';
+  const LOCKOUT_KEY = 'vault_lockout';
+
+  function loadUsers(){
+    try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+
+  function loadLockout(){
+    try { return JSON.parse(localStorage.getItem(LOCKOUT_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveLockout(l){ localStorage.setItem(LOCKOUT_KEY, JSON.stringify(l)); }
+
+  // simple Caesar-style obfuscation, same idea as the C++ version (+3 shift)
+  function encode(pass){
+    return pass.split('').map(c => String.fromCharCode(c.charCodeAt(0) + 3)).join('');
+  }
+  function decode(pass){
+    return pass.split('').map(c => String.fromCharCode(c.charCodeAt(0) - 3)).join('');
+  }
+
+  // ---------- tabs ----------
+  const tabs = document.querySelectorAll('.tab');
+  const loginView = document.getElementById('login-view');
+  const registerView = document.getElementById('register-view');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab.dataset.tab === 'login'){
+        loginView.style.display = '';
+        registerView.style.display = 'none';
+      } else {
+        loginView.style.display = 'none';
+        registerView.style.display = '';
+      }
+    });
+  });
+
+  function showMsg(el, text, type){
+    el.textContent = text;
+    el.className = 'msg show ' + type;
+  }
+
+  // ---------- register ----------
+  document.getElementById('register-btn').addEventListener('click', () => {
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const msg = document.getElementById('register-msg');
+
+    if (!username){
+      showMsg(msg, 'Username khali nahi ho sakta.', 'err');
+      return;
+    }
+    const users = loadUsers();
+    if (users[username]){
+      showMsg(msg, 'Ye username pehle se maujood hai — doosra choose karein.', 'err');
+      return;
+    }
+    if (password.length < 6){
+      showMsg(msg, 'Password kam se kam 6 characters ka hona chahiye.', 'err');
+      return;
+    }
+
+    users[username] = encode(password);
+    saveUsers(users);
+    showMsg(msg, '✅ Registration successful! Ab Login tab se sign in karein.', 'ok');
+    document.getElementById('reg-username').value = '';
+    document.getElementById('reg-password').value = '';
+  });
+
+  // ---------- login + lockout ----------
+  const leds = document.querySelectorAll('#login-leds .led');
+  const lockoutBanner = document.getElementById('lockout-banner');
+  const lockoutCountdown = document.getElementById('lockout-countdown');
+  const loginBtn = document.getElementById('login-btn');
+  let countdownTimer = null;
+
+  function renderLeds(count){
+    leds.forEach((led, i) => {
+      led.classList.toggle('lit', i < count);
+    });
+  }
+
+  function formatTime(sec){
+    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const s = Math.floor(sec % 60).toString().padStart(2, '0');
+    return m + ':' + s;
+  }
+
+  function startCountdown(untilTs){
+    clearInterval(countdownTimer);
+    loginBtn.disabled = true;
+    lockoutBanner.classList.add('show');
+
+    function tick(){
+      const remaining = untilTs - Math.floor(Date.now() / 1000);
+      if (remaining <= 0){
+        clearInterval(countdownTimer);
+        lockoutBanner.classList.remove('show');
+        loginBtn.disabled = false;
+        return;
+      }
+      lockoutCountdown.textContent = formatTime(remaining);
+    }
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
+
+  // on load, check if the last-attempted username (if any) is mid-lockout
+  document.getElementById('login-username').addEventListener('blur', checkLockoutForField);
+  function checkLockoutForField(){
+    const username = document.getElementById('login-username').value.trim();
+    if (!username) return;
+    const lockoutData = loadLockout();
+    const info = lockoutData[username];
+    const now = Math.floor(Date.now() / 1000);
+    if (info){
+      renderLeds(info.failedAttempts || 0);
+      if (info.lockoutUntil && info.lockoutUntil > now){
+        startCountdown(info.lockoutUntil);
+      } else {
+        lockoutBanner.classList.remove('show');
+        loginBtn.disabled = false;
+      }
+    } else {
+      renderLeds(0);
+      lockoutBanner.classList.remove('show');
+      loginBtn.disabled = false;
+    }
+  }
+
+  loginBtn.addEventListener('click', () => {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const msg = document.getElementById('login-msg');
+    const now = Math.floor(Date.now() / 1000);
+
+    if (!username){
+      showMsg(msg, 'Username enter karein.', 'err');
+      return;
+    }
+
+    let lockoutData = loadLockout();
+    let info = lockoutData[username] || { failedAttempts: 0, lockoutUntil: 0 };
+
+    if (info.lockoutUntil && info.lockoutUntil > now){
+      startCountdown(info.lockoutUntil);
+      showMsg(msg, '🔒 Account lock hai — countdown khatam hone ka intezaar karein.', 'warn');
+      return;
+    } else if (info.lockoutUntil && info.lockoutUntil <= now){
+      info.failedAttempts = 0;
+      info.lockoutUntil = 0;
+    }
+
+    const users = loadUsers();
+    if (!users[username]){
+      showMsg(msg, '❌ Ye username registered nahi hai.', 'err');
+      return;
+    }
+
+    if (decode(users[username]) === password){
+      showMsg(msg, '✅ Login successful! Welcome, ' + username + '.', 'ok');
+      lockoutData[username] = { failedAttempts: 0, lockoutUntil: 0 };
+      saveLockout(lockoutData);
+      renderLeds(0);
+      lockoutBanner.classList.remove('show');
+      loginBtn.disabled = false;
+    } else {
+      info.failedAttempts = (info.failedAttempts || 0) + 1;
+      renderLeds(info.failedAttempts);
+
+      if (info.failedAttempts >= MAX_ATTEMPTS){
+        info.lockoutUntil = now + LOCKOUT_DURATION;
+        lockoutData[username] = info;
+        saveLockout(lockoutData);
+        startCountdown(info.lockoutUntil);
+        showMsg(msg, '🔒 3 galat attempts — account ' + LOCKOUT_DURATION + ' seconds ke liye lock ho gaya.', 'err');
+      } else {
+        lockoutData[username] = info;
+        saveLockout(lockoutData);
+        showMsg(msg, '❌ Galat password! Attempt ' + info.failedAttempts + ' of ' + MAX_ATTEMPTS + '.', 'err');
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

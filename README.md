@@ -1,62 +1,124 @@
-# InternGrow_AuthSystem
+# 🔐 Secure Auth System
+
+A secure user authentication system featuring **registration, login, and a smart account-lockout mechanism**, built as a robust **C++ console application** and mirrored in an interactive **web demo (Vault Panel)**.
+
+**🔗 Live Demo:** [https://ayeshajavid91-star.github.io/Secure-Auth-System/](https://ayeshajavid91-star.github.io/Secure-Auth-System/)
+
+---
 
 ## 📌 Project Overview
-**Secure User Authentication System** is a C++ console application developed as part of the **InternGrow C++ Programming Track (Module 1 – Task 2)**. It allows users to register with a username and password, validates login credentials, and securely stores user data in an external file.
 
-## 🚀 Features
+This project implements a complete authentication flow — user registration, credential verification, and protection against brute-force login attempts — with data persisted to an external file in the C++ version, and browser-based storage in the web demo.
 
-### Core Features
-- User Registration with duplicate username detection
-- Secure Login with credential verification against stored data
+---
+
+## ✨ Features
+
+### 🔑 Core Features
+- User registration with duplicate-username detection
+- Secure login with credential verification
 - Input validation (empty fields, minimum password length)
-- Credentials stored in an external file (`users.txt`) with basic password encoding
-- Menu-driven interface (Register / Login / Exit)
+- Credentials stored safely with basic password encoding
+- Clean, menu-driven interface
 
-### 🔒 Upgrade Feature — Lockout Mechanism
-- Tracks failed login attempts for each user
-- After **3 consecutive wrong password attempts**, the account is **temporarily locked** for a fixed duration (60 seconds)
-- Displays remaining lockout time if a locked account tries to log in
+### 🔒 Account Lockout System
+- Tracks failed login attempts per user
+- Account automatically **locks for 60 seconds** after **3 consecutive failed attempts**
+- Live countdown display while an account is locked
 - Automatically unlocks and resets attempts once the lockout period expires
-- Lockout data persists across program runs using a separate file (`lockout.txt`)
+- Lockout state persists across sessions
+
+### 🌐 Web Demo — "Vault Panel"
+- Interactive Login / Register interface with a secure-terminal-inspired design
+- Real-time **failed-attempt indicator** (LED-style visual feedback)
+- Live lockout countdown timer
+- Same 3-attempt / 60-second lockout logic as the C++ version, running entirely client-side
+
+---
 
 ## 🛠️ Tech Stack
-- **Language:** C++
-- **Concepts Used:** File Handling (fstream), Structs, Maps, String Manipulation, Time Functions (ctime), Loops & Conditionals
+
+| Layer | Technology |
+|---|---|
+| Core Logic | C++ (fstream, structs, maps, ctime) |
+| Web Demo | HTML, CSS, JavaScript |
+| Storage (C++) | External file (`users.txt`, `lockout.txt`) |
+| Storage (Web) | Browser localStorage |
+
+---
 
 ## ⚙️ How It Works
-1. **Registration:** Username and password are checked for validity, then stored in `users.txt` in the format `username,encodedPassword`.
-2. **Login:** The system first checks if the account is locked. If not, it verifies the entered credentials against the stored file.
-3. **Lockout Logic:** Each failed attempt increases a counter. On reaching 3 failed attempts, a lockout timestamp is set (current time + 60 seconds). Login attempts are blocked until this time passes.
+
+1. **Registration** — Username and password are validated, then securely stored.
+2. **Login** — The system checks for an active lockout before verifying credentials.
+3. **Lockout Logic** — Each failed attempt increments a counter. On the 3rd consecutive failure, the account is locked for 60 seconds; further attempts are blocked until the timer expires.
+
+---
 
 ## ▶️ How to Run
-1. Compile the program:
+
+### C++ Console Version
+```bash
 g++ Auth_System.cpp -o Auth_System
-
-2. Run the executable:
 ./Auth_System
+```
+Follow the on-screen menu to **Register**, **Login**, or **Exit**.
 
-3. Choose an option from the menu:
-1. Register
-2. Login
-3. Exit
+### Web Demo
+No installation needed — try it live:
+👉 **[Open Vault Panel](https://ayeshajavid91-star.github.io/Secure-Auth-System/)**
 
-4. Follow the on-screen prompts to enter your username and password.
+Or run locally:
+```bash
+git clone https://github.com/ayeshajavid91-star/Secure-Auth-System.git
+cd Secure-Auth-System
+```
+Then open `index.html` in your browser.
 
-## 📸 Sample Output
-========== Secure User Authentication System ==========
+---
 
-1. Register
-2. Login
-3. Exit
-Apna choice enter karo: 2
-Username enter karo: testuser
-Password enter karo: wrongpass
-❌ Galat password! Attempt 1 of 3.
+## 📂 Project Structure
 
-🔒 3 consecutive galat attempts ho gaye! Account 60 seconds ke liye lock kar diya gaya hai.
+```
+Secure-Auth-System/
+├── Auth_System.cpp     # C++ console application
+├── index.html           # Web demo (Vault Panel)
+└── README.md
+```
 
-## 🎓 About InternGrow
-This project was developed as part of the **InternGrow C++ Programming Track**, a project-based internship program focused on providing hands-on programming experience.
+---
+
+## 🏷️ Suggested GitHub Topics
+
+```
+cpp
+authentication-system
+login-system
+secure-login
+file-handling
+password-security
+lockout-mechanism
+javascript
+html-css-javascript
+web-app
+console-application
+programming-project
+```
+
+---
 
 ## 👤 Author
-Developed by [Your Name] as part of InternGrow Internship — Module 1.
+
+Developed by **Ayesha Javid**.
+
+---
+
+## 📄 License
+
+**All Rights Reserved.**
+
+This project and its source code are the intellectual property of the author. No part of this repository — including the code, design, or documentation — may be copied, modified, distributed, used, or reproduced in any form without the explicit written permission of the author.
+
+© 2026 Ayesha Javid. Unauthorized use is strictly prohibited.
+
+For permissions or licensing inquiries, contact: **ayeshajavid91@gmail.com**
